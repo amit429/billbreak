@@ -1,0 +1,203 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ===== BillBreak Design System ===== */
+@theme inline {
+  /* Fonts */
+  --font-sans: "Geist", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  /* Shadcn Color Mappings */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* User Color System - 4 distinct palettes */
+  --color-user-emerald: oklch(0.65 0.17 160);
+  --color-user-emerald-light: oklch(0.75 0.15 160);
+  --color-user-emerald-dark: oklch(0.45 0.15 160);
+  
+  --color-user-blue: oklch(0.65 0.17 240);
+  --color-user-blue-light: oklch(0.75 0.15 240);
+  --color-user-blue-dark: oklch(0.45 0.15 240);
+  
+  --color-user-purple: oklch(0.65 0.17 300);
+  --color-user-purple-light: oklch(0.75 0.15 300);
+  --color-user-purple-dark: oklch(0.45 0.15 300);
+  
+  --color-user-rose: oklch(0.65 0.17 15);
+  --color-user-rose-light: oklch(0.75 0.15 15);
+  --color-user-rose-dark: oklch(0.45 0.15 15);
+
+  /* Accent mint */
+  --color-mint: oklch(0.75 0.15 165);
+  --color-mint-dark: oklch(0.55 0.15 165);
+}
+
+/* ===== Dark Theme (Default) ===== */
+:root {
+  --radius: 0.75rem;
+  
+  /* Deep navy blue background */
+  --background: oklch(0.13 0.01 260);
+  --foreground: oklch(0.98 0 0);
+  
+  /* Cards - slightly lighter */
+  --card: oklch(0.18 0.01 260);
+  --card-foreground: oklch(0.98 0 0);
+  
+  --popover: oklch(0.18 0.01 260);
+  --popover-foreground: oklch(0.98 0 0);
+  
+  /* Primary - mint accent */
+  --primary: oklch(0.75 0.15 165);
+  --primary-foreground: oklch(0.13 0.01 260);
+  
+  /* Secondary */
+  --secondary: oklch(0.22 0.01 260);
+  --secondary-foreground: oklch(0.98 0 0);
+  
+  /* Muted */
+  --muted: oklch(0.22 0.01 260);
+  --muted-foreground: oklch(0.65 0 0);
+  
+  /* Accent */
+  --accent: oklch(0.22 0.01 260);
+  --accent-foreground: oklch(0.98 0 0);
+  
+  /* Destructive */
+  --destructive: oklch(0.65 0.2 25);
+  
+  /* Borders - subtle */
+  --border: oklch(0.30 0.01 260);
+  --input: oklch(0.25 0.01 260);
+  --ring: oklch(0.75 0.15 165);
+}
+
+/* ===== Base Styles ===== */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    min-height: 100vh;
+  }
+}
+
+/* ===== Utility Classes ===== */
+
+/* Glassmorphism */
+.glass {
+  background: oklch(0.18 0.01 260 / 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid oklch(0.30 0.01 260 / 0.5);
+}
+
+.glass-strong {
+  background: oklch(0.18 0.01 260 / 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid oklch(0.30 0.01 260 / 0.6);
+}
+
+/* Grid background pattern */
+.bg-grid {
+  background-image: 
+    linear-gradient(oklch(0.30 0.01 260 / 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.30 0.01 260 / 0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* User color utilities */
+.user-emerald {
+  --user-color: var(--color-user-emerald);
+  --user-color-light: var(--color-user-emerald-light);
+  --user-color-dark: var(--color-user-emerald-dark);
+}
+
+.user-blue {
+  --user-color: var(--color-user-blue);
+  --user-color-light: var(--color-user-blue-light);
+  --user-color-dark: var(--color-user-blue-dark);
+}
+
+.user-purple {
+  --user-color: var(--color-user-purple);
+  --user-color-light: var(--color-user-purple-light);
+  --user-color-dark: var(--color-user-purple-dark);
+}
+
+.user-rose {
+  --user-color: var(--color-user-rose);
+  --user-color-light: var(--color-user-rose-light);
+  --user-color-dark: var(--color-user-rose-dark);
+}
+
+/* Tabular numbers for price alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.30 0.01 260);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.40 0.01 260);
+}
+
+/* Hide scrollbar but allow scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

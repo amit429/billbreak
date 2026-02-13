@@ -90,15 +90,25 @@ Intuitively drag items to users for quick assignment. Works on both desktop and 
 | **TypeScript** | Type-safe development |
 | **Vite** | Lightning-fast dev server & build |
 | **Tailwind CSS v4** | Utility-first styling |
+| **React Router 7** | Client-side routing |
 | **Framer Motion** | Smooth animations |
 | **dnd-kit** | Accessible drag-and-drop |
 | **Shadcn/UI** | Beautiful, accessible components |
 | **Google Gemini AI** | Receipt image parsing |
 
+### Routes
+
+| Route | Screen | Description |
+|-------|--------|-------------|
+| `/` | Upload | Home screen - upload receipt or start manually |
+| `/split` | Assign | Split items among people |
+| `/results` | Results | Final breakdown of who owes what |
+
 ### Architecture Highlights
 
 - **Feature-based structure** — Code organized by domain (`features/upload`, `features/splitter`)
 - **Context + useReducer** — Predictable state management without Redux overhead
+- **React Router** — URL-based navigation with browser back/forward support
 - **Discriminated unions** — Type-safe actions for all state changes
 - **Selector pattern** — Computed values derived from single source of truth
 

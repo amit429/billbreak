@@ -3,11 +3,13 @@
 // ============================================
 // Shows the final breakdown of who owes what
 
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Share2, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBill } from '@/context/bill'
-import { BillStatus, USER_COLOR_CLASSES } from '@/types'
+import { USER_COLOR_CLASSES } from '@/types'
 import { cn } from '@/lib/utils'
 import {
   Accordion,
@@ -18,7 +20,30 @@ import {
 import { UserAvatar } from '../components/UserAvatar'
 
 export function ResultsScreen() {
+  const navigate = useNavigate()
   const { state, actions, grandTotal, userShares } = useBill()
+
+  // Redirect to home if no items or users (user navigated directly or refreshed)
+  useEffect(() => {
+    if (state.items.length === 0 || state.users.length === 0) {
+      navigate('/', { replace: true })
+    }
+  }, [state.items.length, state.users.length, navigate])
+
+  // Navigation handlers
+  const handleBack = () => {
+    navigate('/split')
+  }
+
+  const handleStartNew = () => {
+    actions.reset()
+    navigate('/')
+  }
+
+  // Don't render if no items (will redirect)
+  if (state.items.length === 0 || state.users.length === 0) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-background bg-grid flex flex-col">
@@ -27,7 +52,7 @@ export function ResultsScreen() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => actions.setStatus(BillStatus.ASSIGN)}
+          onClick={handleBack}
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back
@@ -181,7 +206,7 @@ export function ResultsScreen() {
           <Button
             className="w-full"
             variant="outline"
-            onClick={() => actions.reset()}
+            onClick={handleStartNew}
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             Start New Bill

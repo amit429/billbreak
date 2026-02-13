@@ -1,32 +1,30 @@
 // ============================================
-// App - Screen Router
+// App - Route Configuration
 // ============================================
-// Routes between screens based on current bill status
+// Uses React Router for navigation between screens
 
-import { useBill } from '@/context/bill'
-import { BillStatus } from '@/types'
+import { Routes, Route, Navigate } from 'react-router-dom'
 
 // Screens
 import { UploadScreen } from '@/features/upload'
 import { AssignScreen, ResultsScreen } from '@/features/splitter'
 
 function App() {
-  const { state } = useBill()
-
-  // Route based on current status
-  switch (state.currentStatus) {
-    case BillStatus.UPLOAD:
-      return <UploadScreen />
-
-    case BillStatus.ASSIGN:
-      return <AssignScreen />
-
-    case BillStatus.RESULTS:
-      return <ResultsScreen />
-
-    default:
-      return <UploadScreen />
-  }
+  return (
+    <Routes>
+      {/* Home - Upload/Start screen */}
+      <Route path="/" element={<UploadScreen />} />
+      
+      {/* Split - Item assignment screen */}
+      <Route path="/split" element={<AssignScreen />} />
+      
+      {/* Results - Final summary screen */}
+      <Route path="/results" element={<ResultsScreen />} />
+      
+      {/* Fallback - Redirect unknown routes to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
 }
 
 export default App

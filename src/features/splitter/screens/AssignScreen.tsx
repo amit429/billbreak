@@ -3,7 +3,8 @@
 // ============================================
 // Split-screen layout: Receipt items (left) + User sidebar (right)
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   DndContext,
@@ -19,7 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { useBill } from '@/context/bill'
-import { BillStatus, type BillItem, getRemainingQuantity, getUserAssignedQuantity } from '@/types'
+import { type BillItem, getRemainingQuantity, getUserAssignedQuantity } from '@/types'
 
 // Components
 import { ReceiptItem, ReceiptItemDragOverlay } from '../components/ReceiptItem'
@@ -30,10 +31,18 @@ import { AddItemInput } from '../components/AddItemInput'
 import { EditItemModal } from '../components/EditItemModal'
 
 export function AssignScreen() {
+  const navigate = useNavigate()
   const { state, actions, progress, subtotal, grandTotal, userShares } = useBill()
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
   const [activeItemId, setActiveItemId] = useState<string | null>(null)
   const [editingItem, setEditingItem] = useState<BillItem | null>(null)
+
+  // Redirect to home if no items (user navigated directly or refreshed)
+  useEffect(() => {
+    if (state.items.length === 0) {
+      navigate('/', { replace: true })
+    }
+  }, [state.items.length, navigate])
 
   // DnD sensors
   const sensors = useSensors(
@@ -122,6 +131,20 @@ export function AssignScreen() {
     actions.removeItem(itemId)
   }
 
+  // Navigation handlers
+  const handleBack = () => {
+    navigate('/')
+  }
+
+  const handleContinue = () => {
+    navigate('/results')
+  }
+
+  // Don't render if no items (will redirect)
+  if (state.items.length === 0) {
+    return null
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -138,7 +161,7 @@ export function AssignScreen() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => actions.setStatus(BillStatus.UPLOAD)}
+                  onClick={handleBack}
                 >
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   Back
@@ -249,7 +272,7 @@ export function AssignScreen() {
               <Button
                 className="w-full h-12 text-base font-medium"
                 disabled={progress < 100 || state.users.length === 0}
-                onClick={() => actions.setStatus(BillStatus.RESULTS)}
+                onClick={handleContinue}
               >
                 {state.users.length === 0 ? (
                   'Add people to split with'
@@ -278,7 +301,7 @@ export function AssignScreen() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => actions.setStatus(BillStatus.UPLOAD)}
+                      onClick={handleBack}
                     >
                       <ArrowLeft className="w-4 h-4 mr-1" />
                       Back
@@ -406,7 +429,7 @@ export function AssignScreen() {
               <Button
                 className="w-full h-12 text-base font-medium"
                 disabled={progress < 100 || state.users.length === 0}
-                onClick={() => actions.setStatus(BillStatus.RESULTS)}
+                onClick={handleContinue}
               >
                 {state.users.length === 0 ? (
                   'Add people to split with'

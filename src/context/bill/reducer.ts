@@ -4,7 +4,7 @@
 // Pure function: (state, action) => newState
 // MUST be immutable - never modify state directly
 
-import { type BillState, type BillItem, type User, BillStatus, getRemainingQuantity } from '@/types'
+import { type BillState, type BillItem, type User, getRemainingQuantity } from '@/types'
 import type { BillAction } from './types'
 import { initialState } from './initialState'
 import { generateId, getNextUserColor } from './helpers'
@@ -17,7 +17,7 @@ export function billReducer(state: BillState, action: BillAction): BillState {
       return {
         ...state,
         items: action.payload,
-        currentStatus: action.payload.length > 0 ? BillStatus.ASSIGN : state.currentStatus,
+        // Note: Navigation is handled by React Router, not currentStatus
       }
     }
 
@@ -248,12 +248,12 @@ export function billReducer(state: BillState, action: BillAction): BillState {
 
     case 'LOAD_DEMO': {
       // Reset and load demo data in one action
+      // Note: Navigation is handled by React Router
       return {
         ...initialState,
         items: action.payload.items,
         users: action.payload.users,
         taxAmount: action.payload.taxAmount,
-        currentStatus: BillStatus.ASSIGN,
       }
     }
 

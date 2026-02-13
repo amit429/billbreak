@@ -3,7 +3,8 @@
 // ============================================
 // The first screen - upload a receipt image
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Receipt, Sparkles, ArrowRight, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -45,15 +46,28 @@ const DEMO_ITEMS: BillItem[] = [
 const DEMO_TAX = 285 // 5% GST on total
 
 export function UploadScreen() {
-  const { actions } = useBill()
+  const navigate = useNavigate()
+  const { state, actions } = useBill()
   const [showManualEntry, setShowManualEntry] = useState(false)
   const [manualItems, setManualItems] = useState<Array<{ name: string; price: string }>>([
     { name: '', price: '' },
   ])
 
-  // Load demo bill using the LOAD_DEMO action which resets state first
+  // Reset state when landing on upload screen (handles browser back)
+  useEffect(() => {
+    // Only reset if there are items (meaning user navigated back)
+    if (state.items.length > 0) {
+      actions.reset()
+    }
+    // Reset local state
+    setShowManualEntry(false)
+    setManualItems([{ name: '', price: '' }])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load demo bill and navigate to split screen
   const handleLoadDemo = () => {
     actions.loadDemo(DEMO_ITEMS, DEMO_USERS, DEMO_TAX)
+    navigate('/split')
   }
 
   // Manual entry handlers
@@ -86,6 +100,7 @@ export function UploadScreen() {
 
     if (validItems.length > 0) {
       actions.setItems(validItems)
+      navigate('/split')
     }
   }
 

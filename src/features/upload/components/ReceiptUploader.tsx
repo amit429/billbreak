@@ -3,6 +3,7 @@
 // ============================================
 // Main component that orchestrates the upload flow
 
+import { useNavigate } from 'react-router-dom'
 import { AlertCircle, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -16,6 +17,7 @@ interface ReceiptUploaderProps {
 }
 
 export function ReceiptUploader({ className }: ReceiptUploaderProps) {
+  const navigate = useNavigate()
   const {
     status,
     error,
@@ -25,6 +27,12 @@ export function ReceiptUploader({ className }: ReceiptUploaderProps) {
     reset,
     confirmItems,
   } = useReceiptUpload()
+
+  // Handle confirm and navigate
+  const handleConfirm = () => {
+    confirmItems()
+    navigate('/split')
+  }
 
   return (
     <div className={cn('w-full', className)}>
@@ -42,7 +50,7 @@ export function ReceiptUploader({ className }: ReceiptUploaderProps) {
       {status === 'success' && (
         <ParsedItemsList
           items={parsedItems}
-          onConfirm={confirmItems}
+          onConfirm={handleConfirm}
           onReset={reset}
         />
       )}

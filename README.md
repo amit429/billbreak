@@ -1,73 +1,233 @@
-# React + TypeScript + Vite
+# BillBreak 💸
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Split bills, not friendships.**
 
-Currently, two official plugins are available:
+BillBreak is a modern, intelligent bill-splitting application that makes dividing expenses among friends fair and effortless. No more awkward calculations or debates about who owes what.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-06B6D4?logo=tailwindcss)
+![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?logo=vite)
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## The Problem
 
-## Expanding the ESLint configuration
+Splitting bills shouldn't require a math degree. Yet every group dinner ends the same way:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- *"Who had the extra drink?"*
+- *"Should we just split equally?"* (unfair to the person who only had salad)
+- *"Can someone calculate the tax for each person?"*
+- *"I only had 2 of the 5 cokes, why am I paying for all of them?"*
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+**BillBreak solves this.**
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Features
+
+### 📸 AI-Powered Receipt Scanning
+Upload a photo of your receipt and let Google's Gemini AI extract all items automatically. No manual typing required.
+
+### 👥 Smart User Management
+- Add people with a single tap
+- Each person gets a unique color identity (Emerald, Blue, Purple, Rose)
+- Visual avatars make tracking assignments intuitive
+
+### ✨ Flexible Item Assignment
+
+**Single Items** — Tap to assign, tap again to split
+```
+Pizza → Alice (full item)
+Pizza → Alice + Bob (split 50/50)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+**Multi-Quantity Items** — Assign exact amounts
 ```
+5 Coca-Colas (₹60 each):
+  → Alice: 3 cokes (₹180)
+  → Bob: 1 coke (₹60)  
+  → Carol: 1 coke (₹60)
+```
+
+### 🎯 Drag & Drop
+Intuitively drag items to users for quick assignment. Works on both desktop and mobile.
+
+### 📊 Live Calculations
+- Real-time progress bar showing "Bill Covered" percentage
+- Animated subtotals update as you assign items
+- Tax and tip split proportionally based on each person's share
+
+### 📱 Responsive Design
+- **Mobile**: Vertical item list with bottom user dock
+- **Desktop**: Split-screen layout (60/40) with sidebar
+
+### 🎨 Modern UI
+- Dark theme with glassmorphism effects
+- Smooth Framer Motion animations
+- Beautiful color-coded user system
+
+---
+
+## Real-World Scenarios BillBreak Handles
+
+| Scenario | How BillBreak Helps |
+|----------|---------------------|
+| **Restaurant dinner** | Scan receipt, assign individual dishes, split shared appetizers |
+| **Pizza party** | 3 pizzas, 8 people — assign slices, not whole pizzas |
+| **Grocery shopping** | Split items by who actually uses them |
+| **Drinks round** | 5 beers ordered, but Dave only had 2 |
+| **Shared Uber** | Split the fare proportionally |
+| **Office lunch order** | Everyone pays for what they ordered + their share of delivery fee |
+
+---
+
+## Tech Stack
+
+| Technology | Purpose |
+|------------|---------|
+| **React 19** | UI framework with latest features |
+| **TypeScript** | Type-safe development |
+| **Vite** | Lightning-fast dev server & build |
+| **Tailwind CSS v4** | Utility-first styling |
+| **Framer Motion** | Smooth animations |
+| **dnd-kit** | Accessible drag-and-drop |
+| **Shadcn/UI** | Beautiful, accessible components |
+| **Google Gemini AI** | Receipt image parsing |
+
+### Architecture Highlights
+
+- **Feature-based structure** — Code organized by domain (`features/upload`, `features/splitter`)
+- **Context + useReducer** — Predictable state management without Redux overhead
+- **Discriminated unions** — Type-safe actions for all state changes
+- **Selector pattern** — Computed values derived from single source of truth
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/billbreak.git
+cd billbreak
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Add your Google AI API key to .env
+
+# Start development server
+npm run dev
+```
+
+### Environment Variables
+
+```env
+VITE_GOOGLE_AI_KEY=your_google_ai_api_key_here
+```
+
+Get your free API key at [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+---
+
+## Phase 1 (Current)
+
+**Core Bill Splitting Experience**
+
+- [x] Receipt image upload with AI parsing
+- [x] Manual item entry
+- [x] User management with color coding
+- [x] Single-item assignment (toggle/split)
+- [x] Multi-quantity item assignment (uneven splits)
+- [x] Drag-and-drop item assignment
+- [x] Tax & tip proportional distribution
+- [x] Real-time calculations
+- [x] Results summary with breakdown
+- [x] Demo bill for testing
+- [x] Responsive mobile/desktop layouts
+- [x] Beautiful animations & transitions
+
+---
+
+## Phase 2 (Coming Soon) 🚀
+
+**Stay tuned for exciting features:**
+
+- 🔐 **User Authentication** — Save your bill history
+- 💾 **Cloud Sync** — Access bills across devices
+- 📤 **Share Summary** — Send breakdown via WhatsApp/SMS
+- 💳 **Payment Integration** — Settle up with UPI/PayPal
+- 🧾 **Bill History** — Track past splits and settlements
+- 👥 **Groups** — Create recurring groups (roommates, colleagues)
+- 🌍 **Multi-currency** — Split international trips
+- 📊 **Analytics** — See spending patterns with friends
+- 🔔 **Reminders** — Nudge friends who haven't paid
+
+---
+
+## Project Structure
+
+```
+src/
+├── components/ui/       # Reusable UI components (Shadcn)
+├── context/bill/        # State management (Context + Reducer)
+│   ├── actions.ts       # Action creators
+│   ├── reducer.ts       # State transitions
+│   ├── selectors.ts     # Computed values
+│   └── types.ts         # Action type definitions
+├── features/
+│   ├── upload/          # Receipt upload & parsing
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   └── screens/
+│   └── splitter/        # Bill splitting UI
+│       ├── components/
+│       └── screens/
+├── lib/
+│   ├── gemini.ts        # AI service
+│   └── utils.ts         # Helper functions
+└── types/               # Shared TypeScript types
+```
+
+---
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## Acknowledgments
+
+- [Shadcn/UI](https://ui.shadcn.com/) for beautiful components
+- [Google Gemini](https://ai.google.dev/) for AI-powered receipt parsing
+- [Framer Motion](https://www.framer.com/motion/) for smooth animations
+- [dnd-kit](https://dndkit.com/) for accessible drag-and-drop
+
+---
+
+<p align="center">
+  <b>Made with ☕ and code</b>
+  <br>
+  <i>Because friends who split fairly, stay friends.</i>
+</p>

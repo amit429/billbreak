@@ -9,15 +9,22 @@ import { getAssignedQuantity } from '@/types'
 
 /**
  * Calculate overall assignment progress (0-100)
- * Returns percentage of total item quantities that have been assigned
+ * An item is considered "covered" if it has any assignments
+ * For shared items (totalAssigned > quantity), we count the item as fully covered
  */
 export function selectAssignmentProgress(state: BillState): number {
   if (state.items.length === 0) return 0
 
   const totalQuantity = state.items.reduce((sum, item) => sum + item.quantity, 0)
-  const assignedQuantity = state.items.reduce((sum, item) => sum + getAssignedQuantity(item), 0)
+  
+  // For each item, count the minimum of (assignedQty, itemQty) as covered
+  // This way a shared item (like pizza split 4 ways) counts as fully covered
+  const coveredQuantity = state.items.reduce((sum, item) => {
+    const assigned = getAssignedQuantity(item)
+    return sum + Math.min(assigned, item.quantity)
+  }, 0)
 
-  return Math.round((assignedQuantity / totalQuantity) * 100)
+  return Math.round((coveredQuantity / totalQuantity) * 100)
 }
 
 /**
@@ -37,6 +44,11 @@ export function selectGrandTotal(state: BillState): number {
 /**
  * Calculate what each user owes
  * Distributes tax/tip proportionally based on item share
+ * 
+ * For items split among multiple users:
+ * - If totalAssigned <= item.quantity: user pays (item.price * userQty)
+ * - If totalAssigned > item.quantity (shared item): user pays proportional share
+ *   e.g., 1 pizza (₹500) split 4 ways = ₹125 each
  */
 export function selectUserShares(state: BillState): UserShare[] {
   const subtotal = selectSubtotal(state)
@@ -49,7 +61,14 @@ export function selectUserShares(state: BillState): UserShare[] {
     state.items.forEach((item) => {
       const assignment = item.assignments.find(a => a.userId === user.id)
       if (assignment && assignment.quantity > 0) {
-        const shareAmount = item.price * assignment.quantity
+        const totalAssigned = getAssignedQuantity(item)
+        const itemTotalValue = item.price * item.quantity
+        
+        // Calculate share amount based on proportion of assignment
+        // This handles both normal cases and "split all" cases where
+        // totalAssigned might exceed item.quantity
+        const shareAmount = itemTotalValue * (assignment.quantity / totalAssigned)
+        
         userItems.push({
           item,
           quantity: assignment.quantity,
@@ -86,8 +105,10 @@ export function selectUserSubtotal(state: BillState, userId: string): number {
 
   state.items.forEach((item) => {
     const assignment = item.assignments.find(a => a.userId === userId)
-    if (assignment) {
-      subtotal += item.price * assignment.quantity
+    if (assignment && assignment.quantity > 0) {
+      const totalAssigned = getAssignedQuantity(item)
+      const itemTotalValue = item.price * item.quantity
+      subtotal += itemTotalValue * (assignment.quantity / totalAssigned)
     }
   })
 
@@ -96,18 +117,20 @@ export function selectUserSubtotal(state: BillState, userId: string): number {
 
 /**
  * Check if bill is ready for results
- * All items must have at least one assignment with quantity > 0
+ * All items must have at least one assignment
+ * (for shared items, totalAssigned can exceed quantity)
  */
 export function selectIsBillReady(state: BillState): boolean {
   if (state.items.length === 0 || state.users.length === 0) return false
-  return state.items.every((item) => getAssignedQuantity(item) >= item.quantity)
+  // Item is ready if it has any assignments (totalAssigned > 0)
+  return state.items.every((item) => getAssignedQuantity(item) > 0)
 }
 
 /**
- * Get count of fully assigned items
+ * Get count of assigned items (items with any assignments)
  */
 export function selectAssignedItemCount(state: BillState): number {
-  return state.items.filter((item) => getAssignedQuantity(item) >= item.quantity).length
+  return state.items.filter((item) => getAssignedQuantity(item) > 0).length
 }
 
 /**

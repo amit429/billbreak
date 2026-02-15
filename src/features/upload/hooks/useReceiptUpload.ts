@@ -4,7 +4,7 @@
 // Handles the receipt upload and parsing logic
 
 import { useState, useCallback } from 'react'
-import { parseReceiptWithAI } from '@/lib/gemini'
+import { parseReceiptWithAI, type TaxBreakdown, emptyTaxBreakdown } from '@/lib/gemini'
 import { useBill } from '@/context/bill'
 import type { BillItem } from '@/types'
 
@@ -16,6 +16,9 @@ export interface UseReceiptUploadReturn {
   error: string | null
   progress: number
   parsedItems: BillItem[]
+  taxBreakdown: TaxBreakdown
+  subtotal: number
+  grandTotal: number
 
   // Actions
   uploadReceipt: (file: File) => Promise<void>
@@ -30,6 +33,9 @@ export function useReceiptUpload(): UseReceiptUploadReturn {
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const [parsedItems, setParsedItems] = useState<BillItem[]>([])
+  const [taxBreakdown, setTaxBreakdown] = useState<TaxBreakdown>(emptyTaxBreakdown())
+  const [subtotal, setSubtotal] = useState(0)
+  const [grandTotal, setGrandTotal] = useState(0)
 
   /**
    * Upload and parse a receipt image
@@ -66,8 +72,12 @@ export function useReceiptUpload(): UseReceiptUploadReturn {
       const result = await parseReceiptWithAI(file)
       setProgress(90)
 
-      // Store parsed items
+      // Store parsed data
       setParsedItems(result.items)
+      setTaxBreakdown(result.tax)
+      setSubtotal(result.subtotal)
+      setGrandTotal(result.grandTotal)
+      
       setProgress(100)
       setStatus('success')
 
@@ -86,23 +96,34 @@ export function useReceiptUpload(): UseReceiptUploadReturn {
     setError(null)
     setProgress(0)
     setParsedItems([])
+    setTaxBreakdown(emptyTaxBreakdown())
+    setSubtotal(0)
+    setGrandTotal(0)
   }, [])
 
   /**
-   * Confirm parsed items and move to assignment screen
+   * Confirm parsed items and set tax amount
    */
   const confirmItems = useCallback(() => {
     if (parsedItems.length > 0) {
+      // Set items
       actions.setItems(parsedItems)
-      // setItems action automatically advances to ASSIGN status
+      
+      // Set total tax amount (sum of all tax components)
+      if (taxBreakdown.total > 0) {
+        actions.setTax(taxBreakdown.total)
+      }
     }
-  }, [parsedItems, actions])
+  }, [parsedItems, taxBreakdown, actions])
 
   return {
     status,
     error,
     progress,
     parsedItems,
+    taxBreakdown,
+    subtotal,
+    grandTotal,
     uploadReceipt,
     reset,
     confirmItems,

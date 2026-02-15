@@ -184,7 +184,10 @@ export function billReducer(state: BillState, action: BillAction): BillState {
     }
 
     case 'ASSIGN_ALL_TO_ITEM': {
-      // Assign all users equally to a specific item
+      // Assign all users to a specific item
+      // For items with qty >= userCount: distribute evenly
+      // For items with qty < userCount (like a single pizza split 4 ways): 
+      //   give each user qty=1, the selector will calculate proportional shares
       return {
         ...state,
         items: state.items.map((item) => {
@@ -193,14 +196,25 @@ export function billReducer(state: BillState, action: BillAction): BillState {
           const userCount = state.users.length
           if (userCount === 0) return item
           
-          // Distribute quantity evenly
-          const baseQty = Math.floor(item.quantity / userCount)
-          const remainder = item.quantity % userCount
+          let assignments
           
-          const assignments = state.users.map((user, index) => ({
-            userId: user.id,
-            quantity: baseQty + (index < remainder ? 1 : 0),
-          }))
+          if (item.quantity >= userCount) {
+            // Distribute quantity evenly (e.g., 5 cokes among 4 people = 2,1,1,1)
+            const baseQty = Math.floor(item.quantity / userCount)
+            const remainder = item.quantity % userCount
+            
+            assignments = state.users.map((user, index) => ({
+              userId: user.id,
+              quantity: baseQty + (index < remainder ? 1 : 0),
+            }))
+          } else {
+            // Item quantity < userCount (e.g., 1 pizza split 4 ways)
+            // Give each user quantity=1, they'll share proportionally
+            assignments = state.users.map((user) => ({
+              userId: user.id,
+              quantity: 1,
+            }))
+          }
           
           return { ...item, assignments }
         }),

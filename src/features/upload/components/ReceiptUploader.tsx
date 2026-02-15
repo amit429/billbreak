@@ -23,6 +23,7 @@ export function ReceiptUploader({ className }: ReceiptUploaderProps) {
     error,
     progress,
     parsedItems,
+    taxBreakdown,
     uploadReceipt,
     reset,
     confirmItems,
@@ -46,10 +47,11 @@ export function ReceiptUploader({ className }: ReceiptUploaderProps) {
         <ScanningAnimation progress={progress} status={status} />
       )}
 
-      {/* Success state - Show parsed items */}
+      {/* Success state - Show parsed items with tax */}
       {status === 'success' && (
         <ParsedItemsList
           items={parsedItems}
+          taxBreakdown={taxBreakdown}
           onConfirm={handleConfirm}
           onReset={reset}
         />

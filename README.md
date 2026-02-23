@@ -239,6 +239,8 @@ src/
 └── types/               # Shared TypeScript types
 ```
 
+Please refer to `DOCUMENT.md` file in the repo for detailed information about architecture and whole codebase
+
 ---
 
 ## Contributing

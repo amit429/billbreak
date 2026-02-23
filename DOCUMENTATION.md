@@ -422,6 +422,37 @@ useEffect(() => {
 
 **In BillBreak:**
 - `AddUserInput` → Auto-focus input when opened
+- `AssignScreen` → Global keyboard shortcuts
+
+#### Keyboard Shortcuts Implementation
+
+```tsx
+// Global keyboard listener for "/" to add person
+const handleKeyDown = useCallback((e: KeyboardEvent) => {
+  // Don't trigger if typing in input
+  const target = e.target as HTMLElement
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+    return
+  }
+
+  if (e.key === '/') {
+    e.preventDefault()
+    addUserRef.current?.open()
+  }
+}, [])
+
+useEffect(() => {
+  document.addEventListener('keydown', handleKeyDown)
+  return () => document.removeEventListener('keydown', handleKeyDown)
+}, [handleKeyDown])
+```
+
+**Available Shortcuts:**
+| Key | Action |
+|-----|--------|
+| `/` | Open "Add Person" input |
+| `Enter` | Confirm/submit in dialogs |
+| `Escape` | Cancel/close dialogs |
 
 ### 5.9 Custom Hooks
 
@@ -690,6 +721,209 @@ features/splitter/
 
   <DragOverlay />
 </DndContext>
+```
+
+### 7.3 Advanced Assignment Features
+
+#### Ratio-Based Splitting
+
+For single items (quantity = 1) where one person consumed more than others:
+
+```typescript
+// src/types/index.ts
+export interface RatioPreset {
+  id: string
+  label: string
+  parts: number[]  // e.g., [75, 25] for 75/25 split
+}
+
+export const RATIO_PRESETS: RatioPreset[] = [
+  { id: 'equal-2', label: '50 / 50', parts: [50, 50] },
+  { id: '75-25', label: '75 / 25', parts: [75, 25] },
+  { id: '60-40', label: '60 / 40', parts: [60, 40] },
+  // ... more presets
+]
+```
+
+**How it works:**
+1. User clicks "Ratio" button on a single item
+2. Selects a preset (e.g., 75/25)
+3. Clicks on avatars to assign each percentage part
+4. Cost is calculated proportionally:
+   ```
+   Paneer Butter Masala (₹320):
+   → Alice: 75% = ₹240
+   → Bob: 25% = ₹80
+   ```
+
+#### Half-Quantity Increments (0.5 Steps)
+
+For multi-quantity items where exact counts matter:
+
+```typescript
+// Old: Only whole numbers (1, 2, 3...)
+// New: 0.5 increments (0.5, 1, 1.5, 2, 2.5...)
+
+5 Coca-Colas (₹60 each):
+→ Alice: 2.5 cokes (₹150)
+→ Bob: 1.5 cokes (₹90)
+→ Carol: 1 coke (₹60)
+```
+
+**Implementation:**
+```typescript
+const handleQuantityChange = (userId: string, newQty: number) => {
+  // Round to nearest 0.5
+  const roundedQty = Math.round(newQty * 2) / 2
+  onAssignQuantity?.(userId, roundedQty)
+}
+```
+
+### 7.4 SplitSlip - Downloadable Receipt
+
+**The Feature:** Users can download their bill split as a beautifully designed PDF or PNG image.
+
+**Name:** "SplitSlip" - Your shareable bill receipt!
+
+#### Architecture
+
+```
+features/splitter/
+├── components/
+│   └── SplitSlip.tsx          # Downloadable receipt component
+├── hooks/
+│   └── useDownloadSplitSlip.ts # Download logic (PDF/PNG)
+└── screens/
+    └── ResultsScreen.tsx       # Integrates download UI
+```
+
+#### Key Libraries
+
+```typescript
+// html2canvas - Renders HTML to canvas
+import html2canvas from 'html2canvas'
+
+// jspdf - Generates PDF documents
+import { jsPDF } from 'jspdf'
+```
+
+#### The SplitSlip Component
+
+A white-background receipt designed for sharing:
+
+```tsx
+// src/features/splitter/components/SplitSlip.tsx
+export const SplitSlip = forwardRef<HTMLDivElement, SplitSlipProps>(
+  function SplitSlip({ userShares, subtotal, taxAmount, tipAmount, grandTotal }, ref) {
+    return (
+      <div ref={ref} className="w-[400px] bg-white text-gray-900 p-6 rounded-2xl">
+        {/* Header with logo */}
+        <div className="text-center mb-6">
+          <h1>SplitSlip</h1>
+          <p>Your Fair Share Receipt</p>
+        </div>
+
+        {/* User shares with items */}
+        {userShares.map(share => (
+          <div key={share.user.id}>
+            <UserHeader user={share.user} total={share.total} />
+            <ItemsList items={share.items} />
+          </div>
+        ))}
+
+        {/* Bill summary */}
+        <div className="space-y-2">
+          <Row label="Subtotal" value={subtotal} />
+          <Row label="Tax" value={taxAmount} />
+          <Row label="Grand Total" value={grandTotal} />
+        </div>
+      </div>
+    )
+  }
+)
+```
+
+#### The Download Hook
+
+```typescript
+// src/features/splitter/hooks/useDownloadSplitSlip.ts
+export function useDownloadSplitSlip() {
+  const [status, setStatus] = useState<'idle' | 'generating' | 'success' | 'error'>('idle')
+
+  const generateCanvas = async (element: HTMLElement) => {
+    return html2canvas(element, {
+      scale: 2,           // 2x resolution for clarity
+      backgroundColor: '#ffffff',
+      useCORS: true,      // Allow external images
+    })
+  }
+
+  const downloadAsPng = async (element: HTMLElement) => {
+    setStatus('generating')
+    const canvas = await generateCanvas(element)
+    
+    // Create download link
+    const link = document.createElement('a')
+    link.download = `SplitSlip-${date}.png`
+    link.href = canvas.toDataURL('image/png', 1.0)
+    link.click()
+    
+    setStatus('success')
+  }
+
+  const downloadAsPdf = async (element: HTMLElement) => {
+    setStatus('generating')
+    const canvas = await generateCanvas(element)
+    
+    // Convert canvas to PDF
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [pdfWidth, pdfHeight],
+    })
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, pdfHeight)
+    pdf.save(`SplitSlip-${date}.pdf`)
+    
+    setStatus('success')
+  }
+
+  return { status, downloadAsPng, downloadAsPdf }
+}
+```
+
+#### Integration in ResultsScreen
+
+```tsx
+// src/features/splitter/screens/ResultsScreen.tsx
+export function ResultsScreen() {
+  const splitSlipRef = useRef<HTMLDivElement>(null)
+  const { status, downloadAsPng, downloadAsPdf } = useDownloadSplitSlip()
+
+  return (
+    <>
+      {/* Hidden SplitSlip for rendering */}
+      <div className="fixed -left-[9999px]">
+        <SplitSlip ref={splitSlipRef} {...billData} />
+      </div>
+
+      {/* Download button with format picker */}
+      <Button onClick={() => setShowDownloadMenu(true)}>
+        Download SplitSlip
+      </Button>
+    </>
+  )
+}
+```
+
+**Why Hidden Rendering?**
+- The SplitSlip component needs to be in the DOM for html2canvas to render it
+- We position it off-screen (`-left-[9999px]`) so it's invisible to users
+- The `ref` allows us to pass the element to the download functions
+
+**File Naming:**
+```
+SplitSlip-2026-02-23-15-30-45.png
+SplitSlip-2026-02-23-15-30-45.pdf
 ```
 
 ---

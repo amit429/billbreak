@@ -2,8 +2,10 @@
 // Assign Screen
 // ============================================
 // Split-screen layout: Receipt items (left) + User sidebar (right)
+// Keyboard shortcuts:
+//   "/" - Open add person input
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -18,17 +20,18 @@ import {
 import { ArrowLeft, Check, Receipt } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { cn } from '@/lib/utils'
 import { useBill } from '@/context/bill'
 import { type BillItem, getRemainingQuantity, getUserAssignedQuantity } from '@/types'
 
 // Components
-import { ReceiptItem, ReceiptItemDragOverlay } from '../components/ReceiptItem'
-import { UserCard } from '../components/UserCard'
-import { UserAvatar } from '../components/UserAvatar'
-import { AddUserInput } from '../components/AddUserInput'
-import { AddItemInput } from '../components/AddItemInput'
-import { EditItemModal } from '../components/EditItemModal'
+import { ReceiptItem, ReceiptItemDragOverlay } from '@/features/splitter/components/ReceiptItem'
+import { UserCard } from '@/features/splitter/components/UserCard'
+import { UserAvatar } from '@/features/splitter/components/UserAvatar'
+import { AddUserInput } from '@/features/splitter/components/AddUserInput'
+import { AddItemInput } from '@/features/splitter/components/AddItemInput'
+import { EditItemModal } from '@/features/splitter/components/EditItemModal'
+import { EditUserModal } from '@/features/splitter/components/EditUserModal'
+import type { User } from '@/types'
 
 export function AssignScreen() {
   const navigate = useNavigate()
@@ -36,6 +39,10 @@ export function AssignScreen() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
   const [activeItemId, setActiveItemId] = useState<string | null>(null)
   const [editingItem, setEditingItem] = useState<BillItem | null>(null)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  
+  // Controlled state for AddUserInput (for keyboard shortcut)
+  const [addUserOpen, setAddUserOpen] = useState(false)
 
   // Redirect to home if no items (user navigated directly or refreshed)
   useEffect(() => {
@@ -43,6 +50,25 @@ export function AssignScreen() {
       navigate('/', { replace: true })
     }
   }, [state.items.length, navigate])
+
+  // Keyboard shortcut: "/" to open add person input
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Don't trigger if user is typing in an input/textarea
+    const target = e.target as HTMLElement
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      return
+    }
+
+    if (e.key === '/') {
+      e.preventDefault()
+      setAddUserOpen(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
 
   // DnD sensors
   const sensors = useSensors(
@@ -256,6 +282,7 @@ export function AssignScreen() {
                         size="lg"
                         showDelete
                         onDelete={() => actions.removeUser(user.id)}
+                        onClick={() => setEditingUser(user)}
                       />
                       <span className="text-[10px] text-muted-foreground font-mono">
                         ₹{share?.total.toFixed(0) || 0}
@@ -263,7 +290,12 @@ export function AssignScreen() {
                     </div>
                   )
                 })}
-                <AddUserInput onAddUser={actions.addUser} variant="compact" />
+                <AddUserInput 
+                  onAddUser={actions.addUser} 
+                  variant="compact" 
+                  isOpen={addUserOpen}
+                  onOpenChange={setAddUserOpen}
+                />
               </div>
             </div>
 
@@ -393,8 +425,18 @@ export function AssignScreen() {
           <div className="w-[40%] flex flex-col glass">
             {/* Sidebar header */}
             <div className="p-6 border-b border-border/50">
-              <h2 className="text-lg font-semibold mb-4">People</h2>
-              <AddUserInput onAddUser={actions.addUser} variant="full" />
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">People</h2>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                  Press <kbd className="font-mono bg-background px-1 rounded">/</kbd> to add
+                </span>
+              </div>
+              <AddUserInput 
+                onAddUser={actions.addUser} 
+                variant="full" 
+                isOpen={addUserOpen}
+                onOpenChange={setAddUserOpen}
+              />
             </div>
 
             {/* User cards */}
@@ -413,6 +455,7 @@ export function AssignScreen() {
                     user={share.user}
                     share={share}
                     onDelete={() => actions.removeUser(share.user.id)}
+                    onUpdateName={(newName) => actions.updateUser(share.user.id, { name: newName })}
                   />
                 ))
               )}
@@ -451,13 +494,30 @@ export function AssignScreen() {
           {activeItem && <ReceiptItemDragOverlay item={activeItem} />}
         </DragOverlay>
 
-        {/* Edit modal */}
+        {/* Edit item modal */}
         <EditItemModal
           item={editingItem}
           isOpen={!!editingItem}
           onClose={() => setEditingItem(null)}
           onSave={handleSaveItem}
           onDelete={handleDeleteItem}
+        />
+
+        {/* Edit user modal (mobile) */}
+        <EditUserModal
+          user={editingUser}
+          isOpen={!!editingUser}
+          onClose={() => setEditingUser(null)}
+          onSave={(newName) => {
+            if (editingUser) {
+              actions.updateUser(editingUser.id, { name: newName })
+            }
+          }}
+          onDelete={() => {
+            if (editingUser) {
+              actions.removeUser(editingUser.id)
+            }
+          }}
         />
       </div>
     </DndContext>

@@ -5,9 +5,9 @@
 // MUST be immutable - never modify state directly
 
 import { type BillState, type BillItem, type User, getRemainingQuantity } from '@/types'
-import type { BillAction } from './types'
-import { initialState } from './initialState'
-import { generateId, getNextUserColor } from './helpers'
+import type { BillAction } from '@/context/bill/types'
+import { initialState } from '@/context/bill/initialState'
+import { generateId, getNextUserColor } from '@/context/bill/helpers'
 
 export function billReducer(state: BillState, action: BillAction): BillState {
   switch (action.type) {

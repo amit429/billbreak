@@ -74,6 +74,26 @@ export const USER_COLOR_CLASSES: Record<UserColor, {
   },
 }
 
+// -------- Ratio Presets for Splitting --------
+
+export interface RatioPreset {
+  id: string
+  label: string
+  parts: number[]  // e.g., [75, 25] or [50, 50]
+}
+
+export const RATIO_PRESETS: RatioPreset[] = [
+  { id: 'equal-2', label: '50 / 50', parts: [50, 50] },
+  { id: 'equal-3', label: '33 / 33 / 34', parts: [33, 33, 34] },
+  { id: 'equal-4', label: '25 each', parts: [25, 25, 25, 25] },
+  { id: '75-25', label: '75 / 25', parts: [75, 25] },
+  { id: '60-40', label: '60 / 40', parts: [60, 40] },
+  { id: '70-30', label: '70 / 30', parts: [70, 30] },
+  { id: '80-20', label: '80 / 20', parts: [80, 20] },
+  { id: '60-20-20', label: '60 / 20 / 20', parts: [60, 20, 20] },
+  { id: '50-30-20', label: '50 / 30 / 20', parts: [50, 30, 20] },
+]
+
 // -------- Core Entities --------
 
 export interface User {
@@ -82,10 +102,10 @@ export interface User {
   color: UserColor
 }
 
-// Assignment with quantity support
+// Assignment with quantity support (supports decimals for ratio splits)
 export interface ItemAssignment {
   userId: string
-  quantity: number  // How many of this item the user is taking
+  quantity: number  // How many of this item the user is taking (can be decimal like 0.75)
 }
 
 export interface BillItem {

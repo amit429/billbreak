@@ -5,7 +5,7 @@
 // Benefits: Type-safe dispatch, cleaner component code
 
 import type { BillItem, BillStatus, User, UserColor } from '@/types'
-import type { BillAction } from './types'
+import type { BillAction } from '@/context/bill/types'
 
 type Dispatch = (action: BillAction) => void
 

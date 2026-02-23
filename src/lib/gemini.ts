@@ -17,7 +17,7 @@ if (!API_KEY) {
 
 const genAI = new GoogleGenerativeAI(API_KEY || '')
 
-// Use gemini-2.0-flash (available on free tier, supports vision)
+// Use stable version of gemini-2.0-flash (available on free tier, supports vision)
 const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
 // -------- Types --------
@@ -42,6 +42,23 @@ interface ParsedReceiptData {
 }
 
 // -------- Helpers --------
+
+/**
+ * Delay execution for specified milliseconds
+ */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
+ * Check if error is a rate limit (429) error
+ */
+function isRateLimitError(error: unknown): boolean {
+  const errorString = String(error)
+  return errorString.includes('429') || 
+         errorString.toLowerCase().includes('resource exhausted') ||
+         errorString.toLowerCase().includes('quota')
+}
 
 /**
  * Convert a File object to a base64 string
@@ -228,6 +245,11 @@ export interface ParseReceiptResult {
  * Parse a receipt image using Gemini AI
  * @param imageFile - The receipt image file
  * @returns Parsed bill items, tax breakdown, and totals
+ * 
+ * Implements exponential backoff retry for 429 rate limit errors:
+ * - Attempt 1 fails: Wait 1500ms, retry
+ * - Attempt 2 fails: Wait 3000ms, retry  
+ * - Attempt 3 fails: Throw user-friendly error
  */
 export async function parseReceiptWithAI(imageFile: File): Promise<ParseReceiptResult> {
   if (!API_KEY) {
@@ -246,30 +268,62 @@ export async function parseReceiptWithAI(imageFile: File): Promise<ParseReceiptR
     },
   }
 
-  // Call Gemini API
-  const result = await model.generateContent([RECEIPT_PROMPT, imagePart])
-  const response = await result.response
-  const responseText = response.text()
+  // Retry configuration
+  const MAX_RETRIES = 3
+  const RETRY_DELAYS = [1500, 3000] // Delays after 1st and 2nd failures
 
-  // Parse the response
-  const parsedData = parseAIResponse(responseText)
+  let lastError: unknown
 
-  // Convert to full BillItem objects with IDs
-  const items: BillItem[] = parsedData.items.map((item) => ({
-    id: generateId(),
-    name: item.name,
-    price: item.price,
-    quantity: item.quantity,
-    assignments: [], // Start unassigned
-  }))
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      // Call Gemini API
+      const result = await model.generateContent([RECEIPT_PROMPT, imagePart])
+      const response = await result.response
+      const responseText = response.text()
 
-  return {
-    items,
-    tax: parsedData.tax,
-    subtotal: parsedData.subtotal,
-    grandTotal: parsedData.grandTotal,
-    rawResponse: responseText,
+      // Parse the response
+      const parsedData = parseAIResponse(responseText)
+
+      // Convert to full BillItem objects with IDs
+      const items: BillItem[] = parsedData.items.map((item) => ({
+        id: generateId(),
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        assignments: [], // Start unassigned
+      }))
+
+      return {
+        items,
+        tax: parsedData.tax,
+        subtotal: parsedData.subtotal,
+        grandTotal: parsedData.grandTotal,
+        rawResponse: responseText,
+      }
+    } catch (error) {
+      lastError = error
+      
+      // Check if it's a rate limit error
+      if (isRateLimitError(error)) {
+        // If we have retries left, wait and try again
+        if (attempt < MAX_RETRIES) {
+          const delayMs = RETRY_DELAYS[attempt - 1]
+          console.warn(`Rate limited (attempt ${attempt}/${MAX_RETRIES}). Retrying in ${delayMs}ms...`)
+          await delay(delayMs)
+          continue
+        }
+        
+        // All retries exhausted for rate limit error
+        throw new Error('Google AI servers are currently busy. Please try scanning again in a few moments.')
+      }
+      
+      // Not a rate limit error - throw immediately
+      throw error
+    }
   }
+
+  // Should not reach here, but just in case
+  throw lastError
 }
 
 // -------- Export types and helpers --------

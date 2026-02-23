@@ -3,7 +3,6 @@
 // ============================================
 // Displays user initial with color-coded background
 
-import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import type { User } from '@/types'
 import { USER_COLOR_CLASSES } from '@/types'
@@ -15,8 +14,9 @@ interface UserAvatarProps {
   isDragOver?: boolean
   showDelete?: boolean
   onDelete?: () => void
-  onClick?: () => void
+  onClick?: (e?: React.MouseEvent) => void
   className?: string
+  asSpan?: boolean
 }
 
 const sizeClasses = {
@@ -34,41 +34,47 @@ export function UserAvatar({
   onDelete,
   onClick,
   className,
+  asSpan = false,
 }: UserAvatarProps) {
   const colors = USER_COLOR_CLASSES[user.color]
   const initial = user.name.charAt(0).toUpperCase()
 
+  const avatarClasses = cn(
+    'relative rounded-full flex items-center justify-center',
+    'font-semibold transition-all duration-200',
+    colors.bg,
+    'text-white',
+    sizeClasses[size],
+    isActive && [colors.ring, 'ring-4 ring-offset-2 ring-offset-background', colors.glow],
+    isDragOver && ['scale-110', colors.ring, 'ring-4', colors.glow],
+    onClick && !asSpan && 'cursor-pointer hover:brightness-110',
+    className
+  )
+
   return (
-    <motion.div
+    <div
       className="relative group"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      onClick={(e) => e.stopPropagation()}
     >
-      <motion.button
-        onClick={onClick}
-        className={cn(
-          'relative rounded-full flex items-center justify-center',
-          'font-semibold transition-all duration-200',
-          colors.bg,
-          'text-white',
-          sizeClasses[size],
-          isActive && [colors.ring, 'ring-4 ring-offset-2 ring-offset-background', colors.glow],
-          isDragOver && ['scale-110', colors.ring, 'ring-4', colors.glow],
-          onClick && 'cursor-pointer hover:brightness-110',
-          className
-        )}
-        animate={isDragOver ? { scale: 1.15 } : { scale: 1 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      >
-        {initial}
-      </motion.button>
+      {asSpan ? (
+        <span className={avatarClasses}>
+          {initial}
+        </span>
+      ) : (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onClick?.(e)
+          }}
+          className={avatarClasses}
+        >
+          {initial}
+        </button>
+      )}
 
       {/* Delete button */}
       {showDelete && onDelete && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
+        <button
           onClick={(e) => {
             e.stopPropagation()
             onDelete()
@@ -84,9 +90,9 @@ export function UserAvatar({
           )}
         >
           ×
-        </motion.button>
+        </button>
       )}
-    </motion.div>
+    </div>
   )
 }
 

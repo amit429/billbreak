@@ -5,16 +5,16 @@
 import { createContext, useContext, useReducer, useMemo, type ReactNode } from 'react'
 import type { BillState, UserShare } from '@/types'
 
-import type { BillAction } from './types'
-import { initialState } from './initialState'
-import { billReducer } from './reducer'
-import { createActions, type BillActions } from './actions'
+import type { BillAction } from '@/context/bill/types'
+import { initialState } from '@/context/bill/initialState'
+import { billReducer } from '@/context/bill/reducer'
+import { createActions, type BillActions } from '@/context/bill/actions'
 import {
   selectAssignmentProgress,
   selectSubtotal,
   selectGrandTotal,
   selectUserShares,
-} from './selectors'
+} from '@/context/bill/selectors'
 
 // -------- Context Value Type --------
 

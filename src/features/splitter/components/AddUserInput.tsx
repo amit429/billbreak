@@ -2,6 +2,7 @@
 // AddUserInput Component
 // ============================================
 // Attractive input for adding new users
+// Keyboard shortcut: Press "/" to open
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -13,16 +14,50 @@ interface AddUserInputProps {
   onAddUser: (name: string) => void
   variant?: 'compact' | 'full'
   className?: string
+  // Controlled mode props
+  isOpen?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function AddUserInput({ onAddUser, variant = 'compact', className }: AddUserInputProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export function AddUserInput({ 
+  onAddUser, 
+  variant = 'compact', 
+  className,
+  isOpen: controlledIsOpen,
+  onOpenChange,
+}: AddUserInputProps) {
+  // Support both controlled and uncontrolled modes
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
+  const isControlled = controlledIsOpen !== undefined
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen
+  
+  const setIsOpen = (open: boolean) => {
+    if (isControlled) {
+      onOpenChange?.(open)
+    } else {
+      setInternalIsOpen(open)
+    }
+  }
+
   const [name, setName] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Auto-focus the input when opened
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus()
+    if (isOpen) {
+      // Use requestAnimationFrame to ensure DOM is ready, then focus
+      const focusInput = () => {
+        if (inputRef.current) {
+          inputRef.current.focus()
+        }
+      }
+      // Try multiple times to ensure focus works
+      requestAnimationFrame(() => {
+        focusInput()
+        // Fallback with setTimeout for animations
+        setTimeout(focusInput, 100)
+        setTimeout(focusInput, 200)
+      })
     }
   }, [isOpen])
 
@@ -93,6 +128,7 @@ export function AddUserInput({ onAddUser, variant = 'compact', className }: AddU
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Name..."
+                autoFocus
                 className={cn(
                   'w-24 bg-transparent outline-none',
                   'text-sm text-foreground',
@@ -188,6 +224,7 @@ export function AddUserInput({ onAddUser, variant = 'compact', className }: AddU
               onChange={(e) => setName(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Enter name..."
+              autoFocus
               className={cn(
                 'w-full h-12 px-4 rounded-lg',
                 'bg-background border border-input',

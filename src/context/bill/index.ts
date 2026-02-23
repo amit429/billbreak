@@ -3,12 +3,12 @@
 // ============================================
 
 // Main exports (what most components need)
-export { BillProvider, useBill } from './BillContext'
-export type { BillContextValue } from './BillContext'
+export { BillProvider, useBill } from '@/context/bill/BillContext'
+export type { BillContextValue } from '@/context/bill/BillContext'
 
 // Action types (for advanced usage)
-export type { BillAction } from './types'
-export type { BillActions } from './actions'
+export type { BillAction } from '@/context/bill/types'
+export type { BillActions } from '@/context/bill/actions'
 
 // Selectors (for use outside context if needed)
 export {
@@ -20,10 +20,10 @@ export {
   selectIsBillReady,
   selectAssignedItemCount,
   selectPartiallyAssignedItems,
-} from './selectors'
+} from '@/context/bill/selectors'
 
 // Initial state (for testing)
-export { initialState } from './initialState'
+export { initialState } from '@/context/bill/initialState'
 
 // Helpers (for use in services)
-export { generateId, getNextUserColor } from './helpers'
+export { generateId, getNextUserColor } from '@/context/bill/helpers'

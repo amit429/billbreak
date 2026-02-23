@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useBill } from '@/context/bill'
 import type { BillItem, User } from '@/types'
-import { ReceiptUploader } from '../components/ReceiptUploader'
+import { ReceiptUploader } from '@/features/upload/components/ReceiptUploader'
 
 // Complex demo data showcasing various splitting scenarios
 // Now using the new assignments model with tax
@@ -23,27 +23,30 @@ const DEMO_USERS: User[] = [
 ]
 
 const DEMO_ITEMS: BillItem[] = [
-  // Shared appetizers (everyone shares)
+  // Shared appetizers (use "Split All" or ratio split for these)
   { id: 'd1', name: 'Garlic Bread', price: 180, quantity: 1, assignments: [] },
   { id: 'd2', name: 'Nachos Grande', price: 350, quantity: 1, assignments: [] },
   
-  // Individual mains (single person)
+  // Individual mains (single person each)
   { id: 'd3', name: 'Margherita Pizza (12")', price: 450, quantity: 1, assignments: [] },
   { id: 'd4', name: 'Pepperoni Pizza (12")', price: 550, quantity: 1, assignments: [] },
   { id: 'd5', name: 'Chicken Alfredo Pasta', price: 380, quantity: 1, assignments: [] },
   { id: 'd6', name: 'Grilled Salmon', price: 650, quantity: 1, assignments: [] },
   
-  // Drinks with quantity - showcases uneven splitting
-  { id: 'd7', name: 'Coca-Cola', price: 60, quantity: 5, assignments: [] },
-  { id: 'd8', name: 'Fresh Lime Soda', price: 80, quantity: 3, assignments: [] },
-  { id: 'd9', name: 'Craft Beer Pitcher', price: 450, quantity: 2, assignments: [] },
+  // Dish for ratio split demo (e.g., someone ate 75%, other 25%)
+  { id: 'd7', name: 'Paneer Butter Masala', price: 320, quantity: 1, assignments: [] },
   
-  // Desserts (shared)
-  { id: 'd10', name: 'Chocolate Brownie', price: 220, quantity: 2, assignments: [] },
-  { id: 'd11', name: 'Ice Cream Sundae', price: 180, quantity: 1, assignments: [] },
+  // Drinks with quantity - use 0.5 increments for partial consumption
+  { id: 'd8', name: 'Coca-Cola', price: 60, quantity: 5, assignments: [] },
+  { id: 'd9', name: 'Fresh Lime Soda', price: 80, quantity: 3, assignments: [] },
+  { id: 'd10', name: 'Craft Beer Pitcher', price: 450, quantity: 2, assignments: [] },
+  
+  // Desserts (shared or ratio split)
+  { id: 'd11', name: 'Chocolate Brownie', price: 220, quantity: 2, assignments: [] },
+  { id: 'd12', name: 'Ice Cream Sundae', price: 180, quantity: 1, assignments: [] },
 ]
 
-const DEMO_TAX = 285 // 5% GST on total
+const DEMO_TAX = 247 // ~5% GST on total
 
 export function UploadScreen() {
   const navigate = useNavigate()

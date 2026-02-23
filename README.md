@@ -42,16 +42,32 @@ Pizza → Alice (full item)
 Pizza → Alice + Bob (split 50/50)
 ```
 
-**Multi-Quantity Items** — Assign exact amounts
+**Ratio-Based Splitting** — For uneven consumption (NEW!)
+```
+Paneer Butter Masala (₹320):
+  → Alice: 75% (₹240) — she ate most of it
+  → Bob: 25% (₹80)   — just had a taste
+
+Available ratios: 50/50, 75/25, 60/40, 70/30, 80/20, and more
+```
+
+**Multi-Quantity Items** — Assign exact amounts with 0.5 increments
 ```
 5 Coca-Colas (₹60 each):
-  → Alice: 3 cokes (₹180)
-  → Bob: 1 coke (₹60)  
+  → Alice: 2.5 cokes (₹150)
+  → Bob: 1.5 cokes (₹90)  
   → Carol: 1 coke (₹60)
 ```
 
 ### 🎯 Drag & Drop
 Intuitively drag items to users for quick assignment. Works on both desktop and mobile.
+
+### ⌨️ Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| `/` | Open "Add Person" input |
+| `Enter` | Confirm/submit |
+| `Escape` | Cancel/close |
 
 ### 📊 Live Calculations
 - Real-time progress bar showing "Bill Covered" percentage
@@ -61,6 +77,13 @@ Intuitively drag items to users for quick assignment. Works on both desktop and 
 ### 📱 Responsive Design
 - **Mobile**: Vertical item list with bottom user dock
 - **Desktop**: Split-screen layout (60/40) with sidebar
+
+### 📥 SplitSlip Download (NEW!)
+Download your bill split as a beautiful, shareable receipt:
+- **PNG** — Perfect for sharing on WhatsApp/Instagram
+- **PDF** — Great for records and expense reports
+- Clean white background design for readability
+- Includes complete breakdown per person
 
 ### 🎨 Modern UI
 - Dark theme with glassmorphism effects
@@ -76,7 +99,8 @@ Intuitively drag items to users for quick assignment. Works on both desktop and 
 | **Restaurant dinner** | Scan receipt, assign individual dishes, split shared appetizers |
 | **Pizza party** | 3 pizzas, 8 people — assign slices, not whole pizzas |
 | **Grocery shopping** | Split items by who actually uses them |
-| **Drinks round** | 5 beers ordered, but Dave only had 2 |
+| **Drinks round** | 5 beers ordered, but Dave only had 2.5 (half-drink support!) |
+| **Shared curry** | Someone ate 75% of the dish? Use ratio split! |
 | **Shared Uber** | Split the fare proportionally |
 | **Office lunch order** | Everyone pays for what they ordered + their share of delivery fee |
 
@@ -95,6 +119,8 @@ Intuitively drag items to users for quick assignment. Works on both desktop and 
 | **dnd-kit** | Accessible drag-and-drop |
 | **Shadcn/UI** | Beautiful, accessible components |
 | **Google Gemini AI** | Receipt image parsing |
+| **html2canvas** | HTML to image conversion |
+| **jsPDF** | PDF document generation |
 
 ### Routes
 
@@ -157,10 +183,12 @@ Get your free API key at [Google AI Studio](https://makersuite.google.com/app/ap
 - [x] User management with color coding
 - [x] Single-item assignment (toggle/split)
 - [x] Multi-quantity item assignment (uneven splits)
+- [x] Ratio-based splitting (75/25, 60/40, etc.)
 - [x] Drag-and-drop item assignment
 - [x] Tax & tip proportional distribution
 - [x] Real-time calculations
 - [x] Results summary with breakdown
+- [x] **SplitSlip** — Download as PDF/PNG
 - [x] Demo bill for testing
 - [x] Responsive mobile/desktop layouts
 - [x] Beautiful animations & transitions
@@ -200,6 +228,10 @@ src/
 │   │   └── screens/
 │   └── splitter/        # Bill splitting UI
 │       ├── components/
+│       │   ├── SplitSlip.tsx    # Downloadable receipt
+│       │   └── ...
+│       ├── hooks/
+│       │   └── useDownloadSplitSlip.ts  # PDF/PNG generation
 │       └── screens/
 ├── lib/
 │   ├── gemini.ts        # AI service
@@ -233,6 +265,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Google Gemini](https://ai.google.dev/) for AI-powered receipt parsing
 - [Framer Motion](https://www.framer.com/motion/) for smooth animations
 - [dnd-kit](https://dndkit.com/) for accessible drag-and-drop
+- [html2canvas](https://html2canvas.hertzen.com/) for HTML to image conversion
+- [jsPDF](https://github.com/parallax/jsPDF) for PDF generation
 
 ---
 

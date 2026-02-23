@@ -7,10 +7,10 @@ import { useNavigate } from 'react-router-dom'
 import { AlertCircle, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { useReceiptUpload } from '../hooks/useReceiptUpload'
-import { DropZone } from './DropZone'
-import { ScanningAnimation } from './ScanningAnimation'
-import { ParsedItemsList } from './ParsedItemsList'
+import { useReceiptUpload } from '@/features/upload/hooks/useReceiptUpload'
+import { DropZone } from '@/features/upload/components/DropZone'
+import { ScanningAnimation } from '@/features/upload/components/ScanningAnimation'
+import { ParsedItemsList } from '@/features/upload/components/ParsedItemsList'
 
 interface ReceiptUploaderProps {
   className?: string

@@ -2,11 +2,12 @@
 // Results Screen
 // ============================================
 // Shows the final breakdown of who owes what
+// Includes SplitSlip download feature (PDF/PNG)
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { ArrowLeft, Share2, RotateCcw } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowLeft, Download, RotateCcw, FileImage, FileText, Check, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBill } from '@/context/bill'
 import { USER_COLOR_CLASSES } from '@/types'
@@ -17,11 +18,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { UserAvatar } from '../components/UserAvatar'
+import { UserAvatar } from '@/features/splitter/components/UserAvatar'
+import { SplitSlip } from '@/features/splitter/components/SplitSlip'
+import { useDownloadSplitSlip } from '@/features/splitter/hooks/useDownloadSplitSlip'
 
 export function ResultsScreen() {
   const navigate = useNavigate()
-  const { state, actions, grandTotal, userShares } = useBill()
+  const { state, actions, grandTotal, subtotal, userShares } = useBill()
+  const splitSlipRef = useRef<HTMLDivElement>(null)
+  const { status, downloadAsPng, downloadAsPdf } = useDownloadSplitSlip()
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false)
 
   // Redirect to home if no items or users (user navigated directly or refreshed)
   useEffect(() => {
@@ -38,6 +44,21 @@ export function ResultsScreen() {
   const handleStartNew = () => {
     actions.reset()
     navigate('/')
+  }
+
+  // Download handlers
+  const handleDownloadPng = async () => {
+    if (splitSlipRef.current) {
+      await downloadAsPng(splitSlipRef.current)
+      setShowDownloadMenu(false)
+    }
+  }
+
+  const handleDownloadPdf = async () => {
+    if (splitSlipRef.current) {
+      await downloadAsPdf(splitSlipRef.current)
+      setShowDownloadMenu(false)
+    }
   }
 
   // Don't render if no items (will redirect)
@@ -58,8 +79,12 @@ export function ResultsScreen() {
           Back
         </Button>
         <h1 className="font-semibold">Summary</h1>
-        <Button variant="ghost" size="sm">
-          <Share2 className="w-4 h-4" />
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => setShowDownloadMenu(true)}
+        >
+          <Download className="w-4 h-4" />
         </Button>
       </header>
 
@@ -109,7 +134,7 @@ export function ResultsScreen() {
                   <AccordionTrigger className="px-4 py-4 hover:no-underline hover:bg-muted/30 transition-colors">
                     <div className="flex items-center justify-between w-full pr-2">
                       <div className="flex items-center gap-4">
-                        <UserAvatar user={share.user} size="lg" />
+                        <UserAvatar user={share.user} size="lg" asSpan />
                         <div className="text-left">
                           <p className="font-semibold text-lg">{share.user.name}</p>
                           <p className="text-xs text-muted-foreground">
@@ -132,29 +157,40 @@ export function ResultsScreen() {
                   <AccordionContent className="px-4 pb-4">
                     {/* Item breakdown */}
                     <div className="space-y-2 mb-4">
-                      {share.items.map(({ item, quantity, shareAmount }) => (
-                        <div
-                          key={item.id}
-                          className="flex justify-between text-sm py-2 border-b border-border/30 last:border-0"
-                        >
-                          <div>
-                            <span className="text-foreground">{item.name}</span>
-                            {quantity !== item.quantity && (
-                              <span className="text-xs text-muted-foreground ml-2">
-                                ({quantity} of {item.quantity})
-                              </span>
-                            )}
-                            {quantity === item.quantity && item.quantity > 1 && (
-                              <span className="text-xs text-muted-foreground ml-2">
-                                (×{quantity})
-                              </span>
-                            )}
+                      {share.items.map(({ item, quantity, shareAmount }) => {
+                        // Format quantity display
+                        const isRatioSplit = item.quantity === 1 && quantity < 1
+                        const isDecimal = quantity % 1 !== 0
+                        const qtyDisplay = isRatioSplit
+                          ? `${Math.round(quantity * 100)}%`
+                          : isDecimal
+                            ? quantity.toFixed(1)
+                            : quantity
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="flex justify-between text-sm py-2 border-b border-border/30 last:border-0"
+                          >
+                            <div>
+                              <span className="text-foreground">{item.name}</span>
+                              {quantity !== item.quantity && (
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  ({qtyDisplay}{isRatioSplit ? '' : ` of ${item.quantity}`})
+                                </span>
+                              )}
+                              {quantity === item.quantity && item.quantity > 1 && (
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  (×{qtyDisplay})
+                                </span>
+                              )}
+                            </div>
+                            <span className="font-mono tabular-nums text-muted-foreground">
+                              ₹{shareAmount.toFixed(0)}
+                            </span>
                           </div>
-                          <span className="font-mono tabular-nums text-muted-foreground">
-                            ₹{shareAmount.toFixed(0)}
-                          </span>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
 
                     {/* Summary */}
@@ -196,13 +232,117 @@ export function ResultsScreen() {
         </Accordion>
       </main>
 
+      {/* Hidden SplitSlip for rendering */}
+      <div className="fixed -left-[9999px] top-0">
+        <SplitSlip
+          ref={splitSlipRef}
+          userShares={userShares}
+          subtotal={subtotal}
+          taxAmount={state.taxAmount}
+          tipAmount={state.tipAmount}
+          grandTotal={grandTotal}
+        />
+      </div>
+
       {/* Bottom actions */}
       <div className="fixed bottom-0 left-0 right-0 z-20 glass-strong border-t border-border/50 p-4 space-y-2">
         <div className="max-w-2xl mx-auto space-y-2">
-          <Button className="w-full h-12 text-base font-medium" variant="default">
-            <Share2 className="w-4 h-4 mr-2" />
-            Share Summary
-          </Button>
+          {/* Download SplitSlip Button */}
+          <div className="relative">
+            <Button
+              className="w-full h-12 text-base font-medium"
+              variant="default"
+              onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+              disabled={status === 'generating'}
+            >
+              {status === 'generating' ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : status === 'success' ? (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Downloaded!
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download SplitSlip
+                </>
+              )}
+            </Button>
+
+            {/* Download format dropdown */}
+            <AnimatePresence>
+              {showDownloadMenu && status === 'idle' && (
+                <>
+                  {/* Backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowDownloadMenu(false)}
+                  />
+                  
+                  {/* Menu */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                    className="absolute bottom-full left-0 right-0 mb-2 z-20"
+                  >
+                    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xl">
+                      <div className="p-2 border-b border-border/50 flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground px-2">Choose format</span>
+                        <button
+                          onClick={() => setShowDownloadMenu(false)}
+                          className="p-1 hover:bg-muted rounded-md transition-colors"
+                        >
+                          <X className="w-3 h-3 text-muted-foreground" />
+                        </button>
+                      </div>
+                      <div className="p-2 space-y-1">
+                        <button
+                          onClick={handleDownloadPng}
+                          className={cn(
+                            'w-full flex items-center gap-3 px-4 py-3 rounded-lg',
+                            'hover:bg-muted/50 transition-colors text-left'
+                          )}
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                            <FileImage className="w-5 h-5 text-purple-400" />
+                          </div>
+                          <div>
+                            <p className="font-medium">PNG Image</p>
+                            <p className="text-xs text-muted-foreground">Perfect for sharing</p>
+                          </div>
+                        </button>
+                        <button
+                          onClick={handleDownloadPdf}
+                          className={cn(
+                            'w-full flex items-center gap-3 px-4 py-3 rounded-lg',
+                            'hover:bg-muted/50 transition-colors text-left'
+                          )}
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-red-400" />
+                          </div>
+                          <div>
+                            <p className="font-medium">PDF Document</p>
+                            <p className="text-xs text-muted-foreground">Great for records</p>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
           <Button
             className="w-full"
             variant="outline"

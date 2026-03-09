@@ -140,6 +140,9 @@ Download your bill split as a beautiful, shareable receipt:
 
 ---
 
+## Demo Video
+https://drive.google.com/file/d/1_1ReQ4AzmHOtOmFGIqve_I4C4_DJEGrN/view?usp=drive_link
+
 ## Getting Started
 
 ### Prerequisites
